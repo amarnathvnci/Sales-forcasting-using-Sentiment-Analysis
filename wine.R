@@ -31,46 +31,46 @@ library(sentimentr)
 library(dplyr)
 sentiments
 
-#get_applements("afinn")
+#get_winements("afinn")
 
 # Reading File -----------------------------------------------------------
-apple <- read.csv("C:/Users/admin/Desktop/Research Project/apple.csv") %>% clean_names()
+wine <- read.csv("C:/Users/admin/Desktop/Research Project/wine.csv") %>% clean_names()
 
 
 # Exploring Data ----------------------------------------------------------
 
-glimpse(apple)
-str(apple)
+glimpse(wine)
+str(wine)
 
 # Checking number of na
-map_df(apple, ~ sum(is.na(.x)))
+map_df(wine, ~ sum(is.na(.x)))
 
 # Only 13695 NA values so omitting that
-apple <- apple %>% na.omit()
+wine <- wine %>% na.omit()
 
 # Checking distribution + correlation using pairs.panels
-pairs.panels(apple[1:100, 2:5])
-pairs.panels(apple[1:100, 6:11])
+pairs.panels(wine[1:100, 2:5])
+pairs.panels(wine[1:100, 6:11])
 
 
 # Exploring & Visualising Data --------------------------------------------
 
 # Distriution of Points Variable
 
-ggplot(data = apple, aes(x = points, colour = I("black"), fill = I("#099DD9"))) +
+ggplot(data = wine, aes(x = points, colour = I("black"), fill = I("#099DD9"))) +
   geom_histogram(binwidth = 1) +
   labs(x = "Points", y = "Frequency", title = "Distribution of points")
 #--------------------------
 
 # Distribution of Price variable
-ggplot(data = apple, aes(x = price, colour = I("black"), fill = I("#099DD9"))) +
+ggplot(data = wine, aes(x = price, colour = I("black"), fill = I("#099DD9"))) +
   geom_histogram() +
   labs(x = "Price", y = "Frequency", title = "Distribution of prices")
 
-# Strongly right skewed, using log to plot apple prices
+# Strongly right skewed, using log to plot wine prices
 #--------------------------
 
-ggplot(data = apple, aes(x = log(price), colour = I("black"), fill = I("#099DD9"))) +
+ggplot(data = wine, aes(x = log(price), colour = I("black"), fill = I("#099DD9"))) +
   geom_histogram() +
   labs(x = "log(Price)", y = "Frequency", title = "Distribution of log(prices)")
 
@@ -78,55 +78,55 @@ ggplot(data = apple, aes(x = log(price), colour = I("black"), fill = I("#099DD9"
 #--------------------------
 
 
-# Checking the word count from reviews for each apple
-apple$wordcount <- sapply(gregexpr("\\S+", apple$text), length)
+# Checking the word count from reviews for each wine
+wine$wordcount <- sapply(gregexpr("\\S+", wine$text), length)
 
-ggplot(data = apple, aes(x = wordcount, colour = I("black"), fill = I("#099DD9"))) +
+ggplot(data = wine, aes(x = wordcount, colour = I("black"), fill = I("#099DD9"))) +
   geom_histogram(binwidth = 3) +
   labs(x = "Word Count", y = "Frequency", title = "Distribution of word count of text")
 
 # slightly right skewed
 #--------------------------
 
-# Country with most costly apples
+# Country with most costly wines
 
-apple %>%
+wine %>%
   group_by(country) %>%
   summarise(avg_price = mean(price)) %>%
   top_n(10) %>%
-  ggplot(aes(x = reorder(country, -avg_price), avg_price, fill = country)) + geom_bar(stat = "identity") + labs(title = "Country with Highest apple Prices", x = "", y = "apple Price") + scale_fill_brewer(palette = "Paired") + theme_bw() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 45, hjust = 1))
+  ggplot(aes(x = reorder(country, -avg_price), avg_price, fill = country)) + geom_bar(stat = "identity") + labs(title = "Country with Highest wine Prices", x = "", y = "wine Price") + scale_fill_brewer(palette = "Paired") + theme_bw() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 45, hjust = 1))
 #--------------------------
 
 # Score Vs Price
 
-ggplot(apple, aes(x = price, y = points)) +
+ggplot(wine, aes(x = price, y = points)) +
   geom_jitter(shape = 1) + geom_smooth() +
 coord_cartesian(xlim = c(0, 4000), ylim = c(75, 100)) +
   labs(title = "Score vs Price", x = "Price", y = "Score")
 
-ggplot(apple, aes(x = price, y = points)) +
+ggplot(wine, aes(x = price, y = points)) +
   geom_jitter(shape = 1) +
   coord_cartesian(xlim = c(0, 40), ylim = c(75, 100)) +
   labs(title = "Score vs Price", x = "Price", y = "Score")
 
-# It appears that the correlation between apple price and points given levels off around $40! Additinally, it is clear from the first larger plot that spending thousands of dollars on a bottle of apple is usually a poor decision and a comparable bottle can be had for much less
+# It appears that the correlation between wine price and points given levels off around $40! Additinally, it is clear from the first larger plot that spending thousands of dollars on a bottle of wine is usually a poor decision and a comparable bottle can be had for much less
 
 #--------------------------
 
 # Explotation of Most Common Words
 
-apple$text <- as.character(apple$text)
-apple$sentiment <- as.numeric(apple$sentiment)
+wine$text <- as.character(wine$text)
+wine$sentiment <- as.numeric(wine$sentiment)
 
-apple = apple %>%
+wine = wine %>%
   mutate(grade = ifelse(sentiment > "3","Good",ifelse(sentiment > "2","Average","Bad")))
 #Creating Grade column based on points
 
-apple$grade = as.factor(apple$grade)
-apple$grade = factor(apple$grade,levels(apple$grade)[c(3,1,2)])
+wine$grade = as.factor(wine$grade)
+wine$grade = factor(wine$grade,levels(wine$grade)[c(3,1,2)])
 
 #Finding most common words
-apple_Words = apple %>% dplyr::select(text, grade)%>%
+wine_Words = wine %>% dplyr::select(text, grade)%>%
   unnest_tokens(word, text)%>%
   anti_join(stop_words)%>%
   dplyr::filter(!str_detect(word, "[0-9]"))
@@ -135,7 +135,7 @@ colourCount = 15
 getPalette = colorRampPalette(brewer.pal(9, "Set1"))
 
 
-apple_Words %>%
+wine_Words %>%
   count(word, sort = TRUE) %>%
   top_n(15) %>%
   mutate(word = reorder(word, n)) %>%
@@ -147,7 +147,7 @@ apple_Words %>%
 
 #--------------------------
 
-comment_words = apple_Words %>%
+comment_words = wine_Words %>%
   count(grade, word, sort = TRUE) %>%
   ungroup()
 
@@ -192,57 +192,57 @@ grade_words %>%
 
 
 #sentiment analysis using sentiment() function
-score <- sentiment(apple$text, polarity_dt = lexicon::hash_sentiment_jockers_rinker, valence_shifters_dt = lexicon::hash_valence_shifters, hyphen = "")
+score <- sentiment(wine$text, polarity_dt = lexicon::hash_sentiment_jockers_rinker, valence_shifters_dt = lexicon::hash_valence_shifters, hyphen = "")
 score1 <- aggregate(sentiment~element_id, data=score, FUN=sum) 
-apple$score <- score1$sentiment
-sum(apple$score) # obtained sum of sentiment score as -19.99 / 3866 = -0.0052, so drop in the rating value
+wine$score <- score1$sentiment
+sum(wine$score) # obtained sum of sentiment score as -19.99 / 3866 = -0.0052, so drop in the rating value
 
 #Use this in program as well https://datascienceplus.com/automated-text-feature-engineering-using-textfeatures-in-r/
-## This link shows that there is drop in share price of apple during december 2014 https://www.macrotrends.net/stocks/charts/AAPL/apple/stock-price-history
+## This link shows that there is drop in share price of wine during december 2014 https://www.macrotrends.net/stocks/charts/AAPL/wine/stock-price-history
 ##AS our total sentiment score is negative it is proven that lower sentment score drops the value of company 
 
 #Sentiment Analysis 
 
-word_final <- inner_join(apple_Words, grade_words[,c("grade","word","tf")], by=c("grade","word"))
+word_final <- inner_join(wine_Words, grade_words[,c("grade","word","tf")], by=c("grade","word"))
 
 word_final <- inner_join(word_final, get_sentiments("afinn"))
 
 sentiment_score <- word_final %>% group_by(grade) %>% summarise(sentiment_score=mean(value)) 
 
-apple_final <- full_join(apple, sentiment_score)
+wine_final <- full_join(wine, sentiment_score)
 
-apple_final %>% group_by(grade) %>% summarise(mean(sentiment_score,na.rm = TRUE))
+wine_final %>% group_by(grade) %>% summarise(mean(sentiment_score,na.rm = TRUE))
 
-temp <- apple_final %>% dplyr::filter(is.na(sentiment_score)) %>% 
+temp <- wine_final %>% dplyr::filter(is.na(sentiment_score)) %>% 
   mutate(sentiment_score= ifelse(grade=="Good",1.76,ifelse(grade=="Average",1.54,1.13)))
 
-apple_final <- apple_final %>% na.omit()
+wine_final <- wine_final %>% na.omit()
 
-apple <- unique(rbind(apple_final,temp))
+wine <- unique(rbind(wine_final,temp))
 
-head(apple)
+head(wine)
 
 
 #change sentiment score
 score1 <- sapply(score, FUN = function(x) {ifelse(x==1.74,1.74,ifelse(x==1.54,0,1.13))})
 #Volume of missing value
-apple$sentiment_score
+wine$sentiment_score
 
 
-#We have created three extra columns in our apple dataset, one for word count, second for grade (based on points) & third score (basis applement score from description of apple)
+#We have created three extra columns in our wine dataset, one for word count, second for grade (based on points) & third score (basis winement score from description of wine)
 
 
 # Model Building ----------------------------------------------------------
 #Creating Test & Train
 
-apple <- apple %>% dplyr::select(points,price,applement_score,wordcount,country)
-dmy <- dummyVars(" ~ .", data = apple,fullRank = T)
-apple_transformed <- data.frame(predict(dmy, newdata = apple))
+wine <- wine %>% dplyr::select(points,price,winement_score,wordcount,country)
+dmy <- dummyVars(" ~ .", data = wine,fullRank = T)
+wine_transformed <- data.frame(predict(dmy, newdata = wine))
 
-splitIndex <- createDataPartition (apple_transformed$points, p=.70, list=FALSE, times=1)
+splitIndex <- createDataPartition (wine_transformed$points, p=.70, list=FALSE, times=1)
 
-train <- apple_transformed[splitIndex, ]
-test <- apple_transformed[-splitIndex, ]
+train <- wine_transformed[splitIndex, ]
+test <- wine_transformed[-splitIndex, ]
 
 
 
